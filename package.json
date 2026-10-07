@@ -1,0 +1,19 @@
+{
+  "name": "whatsapo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "api"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n client,api \"npm run dev -w client\" \"npm run dev -w api\"",
+    "dev:client": "npm run dev -w client",
+    "dev:api": "npm run dev -w api",
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}
