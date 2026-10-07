@@ -1,20 +1,28 @@
-import { createServer } from 'node:http';
+import { existsSync } from 'node:fs';
+import { loadEnvFile } from 'node:process';
+import { createApp } from './app.js';
+import { createPool, initializeDatabase } from './database.js';
+
+const envFile = new URL('../.env', import.meta.url);
+if (existsSync(envFile)) loadEnvFile(envFile);
 
 const port = Number(process.env.PORT ?? 3000);
+const pool = createPool();
+pool.on('error', (error) => console.error('Error de PostgreSQL:', error));
 
-const server = createServer((request, response) => {
-  response.setHeader('Content-Type', 'application/json; charset=utf-8');
-
-  if (request.method === 'GET' && request.url?.split('?')[0] === '/api/health') {
-    response.writeHead(200);
-    response.end(JSON.stringify({ status: 'ok' }));
-    return;
+try {
+  await initializeDatabase(pool);
+  const server = createApp(pool);
+  server.listen(port, '127.0.0.1', () => {
+    console.log(`API disponible en http://127.0.0.1:${port}`);
+  });
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.once(signal, () => {
+      server.close(() => { void pool.end(); });
+    });
   }
-
-  response.writeHead(404);
-  response.end(JSON.stringify({ error: 'Ruta no encontrada' }));
-});
-
-server.listen(port, '127.0.0.1', () => {
-  console.log(`API disponible en http://127.0.0.1:${port}`);
-});
+} catch (error) {
+  console.error('No se pudo iniciar la API. Comprueba PostgreSQL y DATABASE_URL.', error);
+  await pool.end();
+  process.exitCode = 1;
+}
