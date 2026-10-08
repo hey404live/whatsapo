@@ -5,6 +5,9 @@ import { createPool, initializeDatabase } from './database.js';
 
 const envFile = new URL('../.env', import.meta.url);
 if (existsSync(envFile)) loadEnvFile(envFile);
+// Se carga solo en el proceso de la API; nunca se imprime su contenido.
+const r2EnvFile = new URL('../.env.r2.local', import.meta.url);
+if (existsSync(r2EnvFile)) loadEnvFile(r2EnvFile);
 
 const port = Number(process.env.PORT ?? 3000);
 const pool = createPool();
