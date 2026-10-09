@@ -43,6 +43,29 @@ docker compose stop                                    # Detiene la base de dato
 docker compose up -d --wait                             # Vuelve a iniciarla
 ```
 
+## Desplegar la API
+
+El build compila la API, pero no inicia PostgreSQL ni ejecuta `compose.yaml`.
+Crea una base de datos PostgreSQL accesible desde el servicio y configura estas variables
+en el entorno de ejecución de la API:
+
+- `DATABASE_URL`: URL de conexión proporcionada por PostgreSQL, con usuario, contraseña,
+  host, puerto y base de datos. No uses `127.0.0.1` ni `localhost`: dentro del contenedor
+  apuntan al propio contenedor de la API. Si el proveedor exige TLS, usa sus parámetros de conexión.
+- `NODE_ENV=production`: exige `DATABASE_URL` y activa las cookies Secure.
+- `CLIENT_ORIGIN`: origen HTTPS del cliente, por ejemplo `https://chat.example.com`.
+- `PORT`: usa el puerto que asigna la plataforma; por defecto es `3000`.
+
+La API escucha en `0.0.0.0` para recibir conexiones del servicio. `HOST` permite sobrescribirlo.
+Configura el puerto del servicio para que coincida con `PORT` y, si la plataforma permite
+elegir una ruta de comprobación de salud, usa `/api/health`.
+El usuario de PostgreSQL necesita permisos para crear y modificar las tablas al arrancar.
+Después de guardar las variables, vuelve a desplegar.
+
+Un error `ECONNREFUSED 127.0.0.1:5432` significa que la API está intentando usar PostgreSQL
+local: revisa que `DATABASE_URL` esté configurada en el servicio de la API y que no contenga
+la URL de desarrollo. En producción, una variable ausente produce un error explícito.
+
 ## Comandos del proyecto
 
 ```sh

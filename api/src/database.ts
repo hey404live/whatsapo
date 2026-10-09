@@ -1,8 +1,11 @@
 import { Pool } from 'pg';
 
 export function createPool(connectionString = process.env.DATABASE_URL) {
+  if (!connectionString?.trim() && process.env.NODE_ENV === 'production') {
+    throw new Error('DATABASE_URL es obligatoria en producción. Configura la URL de PostgreSQL del servicio; la conexión local solo sirve para desarrollo.');
+  }
   return new Pool({
-    connectionString: connectionString ?? 'postgresql://whatsapo:whatsapo_local@127.0.0.1:5432/whatsapo',
+    connectionString: connectionString?.trim() || 'postgresql://whatsapo:whatsapo_local@127.0.0.1:5432/whatsapo',
     connectionTimeoutMillis: 5000,
     statement_timeout: 10000,
   });
